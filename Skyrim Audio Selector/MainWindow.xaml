@@ -1,0 +1,610 @@
+﻿<Window x:Class="Skyrim_Audio_Selector.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Skyrim_Audio_Selector"
+        mc:Ignorable="d"
+        Title="Skyrim Audio Selector" Height="720" Width="1200"
+        Background="{DynamicResource BgMain}"
+        Foreground="{DynamicResource FgMain}">
+
+    <Window.Resources>
+
+        <!-- Initial colors; overridden by SetTheme(true/false) -->
+        <SolidColorBrush x:Key="BgMain"       Color="#FF1E1E1E"/>
+        <SolidColorBrush x:Key="BgPanel"      Color="#FF252525"/>
+        <SolidColorBrush x:Key="BgControl"    Color="#FF2F2F2F"/>
+        <SolidColorBrush x:Key="BgControlAlt" Color="#FF3A3A3A"/>
+        <SolidColorBrush x:Key="FgMain"       Color="#FFEAEAEA"/>
+        <SolidColorBrush x:Key="Accent"       Color="#FF3C78D8"/>
+
+        <!-- TEXT -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <!-- Grey when disabled -->
+                    <Setter Property="Foreground" Value="#FF777777"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+        </Style>
+
+        <!-- GROUPBOX -->
+        <Style TargetType="GroupBox">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="Background" Value="{DynamicResource BgPanel}"/>
+            <Setter Property="BorderBrush" Value="#FF3A3A3A"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- TEXTBOX -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="3"/>
+            <Setter Property="SelectionBrush" Value="#FF555555"/>
+            <Setter Property="SelectionTextBrush" Value="{DynamicResource FgMain}"/>
+        </Style>
+
+        <!-- COMBOBOX (generic look) -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+        </Style>
+
+        <!-- BUTTON -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource BgControlAlt}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+        </Style>
+
+        <!-- LISTBOX -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF3A3A3A"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <!-- Selected: use Accent + white text so it works in both themes -->
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Accent}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <!-- Hover: just use the alternate background -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BgControlAlt}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- DATAGRID -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF3A3A3A"/>
+            <Setter Property="AlternationCount" Value="2"/>
+            <Setter Property="RowBackground" Value="{DynamicResource BgControl}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource BgControlAlt}"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#FF444444"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#FF444444"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource BgControlAlt}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="BorderBrush" Value="#FF555555"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Accent}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Accent}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- SPECIAL: custom style/template *only* for ModFilterComboBox -->
+        <Style x:Key="ModFilterComboStyle"
+               TargetType="ComboBox"
+               BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <!-- Entire box is actually a ToggleButton that controls IsDropDownOpen -->
+                            <ToggleButton x:Name="ToggleButton"
+                                          Grid.ColumnSpan="2"
+                                          Focusable="False"
+                                          ClickMode="Press"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          IsChecked="{Binding Path=IsDropDownOpen,
+                                                              RelativeSource={RelativeSource TemplatedParent}}">
+                                <Grid>
+                                    <!-- Selected text -->
+                                    <ContentPresenter x:Name="ContentSite"
+                                                      Margin="4,2,20,2"
+                                                      HorizontalAlignment="Left"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                                      RecognizesAccessKey="True"/>
+                                    <!-- Arrow -->
+                                    <Path Margin="0,0,8,0"
+                                          HorizontalAlignment="Right"
+                                          VerticalAlignment="Center"
+                                          Data="M 0 0 L 4 4 L 8 0 Z"
+                                          Fill="{TemplateBinding Foreground}"/>
+                                </Grid>
+                            </ToggleButton>
+
+                            <!-- Dropdown popup -->
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Background="{DynamicResource BgControl}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="1">
+                                    <ScrollViewer SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ToggleButton" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ToggleButton" Property="Background"
+                                        Value="{DynamicResource BgControlAlt}"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="ToggleButton" Property="Background"
+                                        Value="{DynamicResource BgControlAlt}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{DynamicResource BgMain}" Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- paths -->
+            <RowDefinition Height="Auto"/>
+            <!-- filters -->
+            <RowDefinition Height="*"/>
+            <!-- main area -->
+            <RowDefinition Height="Auto"/>
+            <!-- bottom buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- PATHS & PATCH OPTIONS -->
+        <GroupBox Grid.Row="0" Header="Paths and Patch Options"
+                  ToolTip="Configure where your mods live, where Skyrim's Data folder is, and where the generated patch mod should be created.">
+            <Grid Background="{DynamicResource BgPanel}" Margin="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 0: mods root -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 1: Skyrim Data -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 2: output -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 3: modlist -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 4: BSA packing -->
+                </Grid.RowDefinitions>
+
+                <!-- Mods root -->
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Margin="0,0,6,4"
+                           VerticalAlignment="Center"
+                           Text="Mods root:"/>
+                <TextBox x:Name="ModsRootTextBox"
+                         Grid.Row="0" Grid.Column="1"
+                         Margin="0,0,4,4"
+                         ToolTip="Root folder where your mod manager stores individual mod folders (e.g. MO2/Vortex &quot;mods&quot;). Used to discover mods and, if Output root is empty, to place the generated patch mod."/>
+                <Button Grid.Row="0" Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseModsRoot_Click"
+                        Margin="4,0,0,4"
+                        ToolTip="Browse to the root folder that contains all of your mod directories (for example MO2's &quot;mods&quot; folder)."/>
+
+                <!-- Skyrim Data (required) -->
+                <TextBlock Grid.Row="1" Grid.Column="0"
+                           Margin="0,0,6,4"
+                           VerticalAlignment="Center"
+                           Text="Skyrim Data:"/>
+                <TextBox x:Name="SkyrimDataTextBox"
+                         Grid.Row="1" Grid.Column="1"
+                         Margin="0,0,4,4"
+                         ToolTip="Path to Skyrim's Data folder under the game root (where Sound and Music live, together with Skyrim.esm). This is used as the base game audio source and is required."/>
+                <Button Grid.Row="1" Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseSkyrimData_Click"
+                        Margin="4,0,0,4"
+                        ToolTip="Browse to the Skyrim &quot;Data&quot; folder (usually &lt;Skyrim Special Edition&gt;\Data)."/>
+
+                <!-- Output folder root -->
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           Margin="0,0,6,4"
+                           VerticalAlignment="Center"
+                           Text="Output root:"/>
+                <TextBox x:Name="OutputModTextBox"
+                         Grid.Row="2" Grid.Column="1"
+                         Margin="0,0,4,4"
+                         ToolTip="Folder under which the patch mod will be created. If left empty, a folder named &quot;SkyrimAudioSelector_Patch&quot; will be created inside the Mods root so MO2/Vortex can treat it as a normal mod."/>
+                <Button Grid.Row="2" Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseOutputMod_Click"
+                        Margin="4,0,0,4"
+                        ToolTip="Choose where to create the generated patch mod folder (for example your MO2/Vortex &quot;mods&quot; directory)."/>
+
+                <!-- modlist.txt -->
+                <TextBlock Grid.Row="3" Grid.Column="0"
+                           Margin="0,0,6,4"
+                           VerticalAlignment="Center"
+                           Text="modlist.txt (MO2, optional):"/>
+                <TextBox x:Name="ModlistTextBox"
+                         Grid.Row="3" Grid.Column="1"
+                         Margin="0,0,4,4"
+                         ToolTip="Optional MO2-style modlist.txt. Used to read which mods are enabled/disabled and their priorities. If omitted, all folders in Mods root are treated as enabled and ordered by discovery."/>
+                <Button Grid.Row="3" Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseModlist_Click"
+                        Margin="4,0,0,4"
+                        ToolTip="Browse to your MO2/Vortex modlist.txt (or equivalent) so the tool can match your actual enabled mods and load/priorities."/>
+
+                <!-- BSA packing -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                            Orientation="Horizontal"
+                            Margin="0,6,0,0">
+                    <CheckBox x:Name="PackToBsaCheckBox"
+                              Content="Pack patch into BSA (no loose audio files)"
+                              VerticalAlignment="Center"
+                              Margin="0,0,16,0"
+                              Checked="PackToBsaCheckBox_Changed"
+                              Unchecked="PackToBsaCheckBox_Changed"/>
+
+                    <!-- 🔽 This text will now grey out when the checkbox is unchecked -->
+                    <TextBlock Text="bsarch.exe:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,4,0"
+                               IsEnabled="{Binding IsChecked, ElementName=PackToBsaCheckBox}"/>
+
+                    <TextBox x:Name="BsarchPathTextBox"
+                             Width="260"
+                             Margin="0,0,4,0"
+                             IsEnabled="{Binding IsChecked, ElementName=PackToBsaCheckBox}"/>
+
+                    <Button Content="Browse..."
+                            Click="BrowseBsarch_Click"
+                            IsEnabled="{Binding IsChecked, ElementName=PackToBsaCheckBox}"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <!-- FILTERS + SCAN -->
+        <Grid Grid.Row="1" Margin="0,4,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: filters -->
+            <StackPanel Orientation="Horizontal"
+                        Grid.Column="0"
+                        VerticalAlignment="Center">
+                <TextBlock Text="Filter by mod:" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ModFilterComboBox"
+                          Width="220"
+                          Margin="6,0"
+                          Style="{StaticResource ModFilterComboStyle}"
+                          SelectionChanged="ModFilterComboBox_SelectionChanged"
+                          ToolTip="Restrict the conflict list to only conflicts that involve the selected mod. &quot;&lt;All mods&gt;&quot; shows every conflict found.">
+                    <!-- How each item’s text is drawn -->
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}"
+                                       Foreground="{DynamicResource FgMain}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+
+                    <!-- How each row in dropdown behaves -->
+                    <ComboBox.ItemContainerStyle>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+                            <Setter Property="Background" Value="{DynamicResource BgControl}"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource BgControlAlt}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource FgMain}"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FF383838"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ComboBox.ItemContainerStyle>
+                </ComboBox>
+
+                <CheckBox x:Name="ShowVanillaConflictsCheckBox"
+                          Content="Show vanilla conflicts"
+                          Margin="16,0,0,0"
+                          VerticalAlignment="Center"
+                          IsChecked="False"
+                          Click="ShowVanillaConflictsCheckBox_Click"
+                          ToolTip="When unchecked, hides conflicts that are only &quot;base game + 0 or 1 mod&quot;, letting you focus on true multi-mod conflicts. When checked, all conflicts involving the base game are shown."/>
+
+                <!-- Safe mode toggle -->
+                <CheckBox x:Name="SafeModeCheckBox"
+                          Content="Safe mode"
+                          Margin="16,0,0,0"
+                          VerticalAlignment="Center"
+                          IsChecked="False"
+                          Click="SafeModeCheckBox_Click"
+                          ToolTip="When enabled, the list only includes conflicts that involve the base game plus at least one mod. Also, if you pick winners for pure mod-vs-mod conflicts, you will be warned before generating the patch." />
+
+                <TextBlock Text="Search:"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"/>
+                <TextBox x:Name="SearchTextBox"
+                         Width="260"
+                         Margin="6,0"
+                         TextChanged="SearchTextBox_TextChanged"
+                         ToolTip="Free-text filter on the conflict slot path (for example &quot;music/special&quot; or part of a folder/file name). Only conflicts whose path contains this text are shown."/>
+            </StackPanel>
+
+            <!-- Right: Dark mode + Scan -->
+            <StackPanel Orientation="Horizontal"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                <CheckBox x:Name="DarkModeCheckBox"
+                          Content="Dark mode"
+                          IsChecked="True"
+                          Margin="0,0,8,0"
+                          VerticalAlignment="Center"
+                          Click="DarkModeCheckBox_Click"
+                          ToolTip="Toggle the application between dark and light themes. This only affects how the UI looks, not how the patch is generated."/>
+                <Button Content="Scan for conflicts"
+                        Padding="14,4"
+                        Click="ScanButton_Click"
+                        ToolTip="Scan the base game and all enabled mods for audio paths (sound/music) that are provided by more than one source, then populate the conflict and variants lists."/>
+            </StackPanel>
+        </Grid>
+
+        <!-- MAIN AREA (conflicts + variants + splitter) -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="7*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Conflicts -->
+            <GroupBox Header="Conflicting sound/music slots"
+                      Grid.Column="0"
+                      Margin="0,0,6,0"
+                      ToolTip="Each entry represents a sound or music path that is provided by more than one source (base game and/or mods) after applying filters.">
+                <ListBox x:Name="ConflictsListBox"
+                         SelectionChanged="ConflictsListBox_SelectionChanged"
+                         ToolTip="List of all conflicting audio slots that match the current filters. Select one to see which mods provide that sound/music and choose a winner."/>
+            </GroupBox>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Background="#FF444444"
+                          ShowsPreview="False"
+                          ResizeBehavior="PreviousAndNext"
+                          ResizeDirection="Columns"
+                          ToolTip="Drag to resize how much space the conflicts list and variants table take." />
+
+            <!-- Variants -->
+            <GroupBox Header="Variants for selected slot"
+                      Grid.Column="2"
+                      ToolTip="All versions of the currently selected sound/music slot, one row per mod/base game. You can preview audio and choose a winner.">
+                <DataGrid x:Name="VariantsDataGrid"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          ToolTip="Table of all competing variants for the selected audio slot. Columns show which mod they come from, priority, duration, source type, and allow you to preview the sound.">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="★"
+                                            Binding="{Binding WinnerMarker}"
+                                            Width="40">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="ToolTip"
+                                            Value="Indicates which variant is currently marked as the winner for this slot. One row can have a star (★)."/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+
+                            <!-- ✅ Center the star in every row -->
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Mod"
+                                            Binding="{Binding ModName}"
+                                            Width="180">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="ToolTip"
+                                            Value="Name of the mod (or base game) that provides this variant."/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Priority"
+                                            Binding="{Binding DisplayPriority}"
+                                            Width="60">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="ToolTip"
+                                            Value="MO2/Vortex-style priority. &quot;Base&quot; means the vanilla game. Larger numbers wins the conflict by default (unless you explicitly set another as a winner.)"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Duration"
+                                            Binding="{Binding DurationDisplay}"
+                                            Width="60">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="ToolTip"
+                                            Value="Approximate duration of this audio file (rounded at 0.5)."/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Source"
+                                            Binding="{Binding SourceDescription}"
+                                            Width="160">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="ToolTip"
+                                            Value="Whether this variant comes from a loose file or from a BSA/BA2 archive (and which archive)."/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Slot"
+                                            Binding="{Binding RelativeKey}"
+                                            Width="*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+                                       BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="ToolTip"
+                                            Value="Normalized relative audio path (without extension) starting at Sound/Music. This is the audio slot that is in conflict."/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTemplateColumn Header="Preview"
+                        Width="80">
+                            <DataGridTemplateColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader"
+               BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="ToolTip"
+                    Value="Play/stop a short preview of each variant to hear what it sounds like before choosing your audio file."/>
+                                </Style>
+                            </DataGridTemplateColumn.HeaderStyle>
+
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding PlayButtonText}"
+                    Padding="0"
+                    Margin="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Click="PlayButton_Click"
+                    ToolTip="Play/Stop a preview of this specific audio variant."/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+
+        <!-- BOTTOM BUTTONS -->
+        <Grid Grid.Row="3" Margin="0,6,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" Grid.Column="0">
+                <Button Content="Set selected as winner"
+                        Click="SetWinnerButton_Click"
+                        ToolTip="Mark the currently selected row in the variants table as the explicit winner for the selected audio slot. This is the version that will be copied into the patch mod."/>
+                <Button Content="Clear winner for this conflict"
+                        Click="ClearWinnerButton_Click"
+                        ToolTip="Remove any winner selection for the currently selected conflict. "/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right">
+                <Button Content="Generate patch"
+                        Background="{DynamicResource Accent}"
+                        Click="GeneratePatchButton_Click"
+                        ToolTip="Create the patch mod in the chosen output location. Only the ones where you have selected a winner are copied, the rest are ignored by this tool (will continue to follow your load order). If BSA packing is enabled and bsarch.exe is set, audio is packed into a BSA; otherwise loose files are produced."/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
