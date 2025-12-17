@@ -1,26 +1,10 @@
-using Microsoft.Win32;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Archives;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Media;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
-using Forms = System.Windows.Forms;
-using MediaColor = System.Windows.Media.Color;
 using WpfMessageBox = System.Windows.MessageBox;
 
 namespace Skyrim_Audio_Selector
@@ -28,9 +12,6 @@ namespace Skyrim_Audio_Selector
     public partial class MainWindow : Window
     {
         // ---------------- Playback ----------------
-
-        private static string NormalizeArchivePath(string p)
-            => p.Replace('\\', '/').TrimStart('/');
 
         private string ExtractBsaEntryToTemp(SoundVariant variant)
         {
@@ -45,26 +26,23 @@ namespace Skyrim_Audio_Selector
                     return cached;
             }
 
-            string tempRoot = Path.Combine(
-                Path.GetTempPath(), "SkyrimAudioSelector", "BsaExtracts");
+            string tempRoot = Path.Combine(Path.GetTempPath(), "SkyrimAudioSelector", "BsaExtracts");
             Directory.CreateDirectory(tempRoot);
 
-            string fileName = Path.GetFileName(
-                variant.FilePath.Replace('/', Path.DirectorySeparatorChar));
+            string fileName = Path.GetFileName(variant.FilePath.Replace('/', Path.DirectorySeparatorChar));
             string outPath = Path.Combine(tempRoot, $"{Guid.NewGuid():N}_{fileName}");
 
             var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
-            string wantedPath = NormalizeArchivePath(variant.FilePath);
+            string wantedPath = AudioPaths.NormalizeArchivePath(variant.FilePath);
 
             var entry = reader.Files.FirstOrDefault(f =>
                 string.Equals(
-                    NormalizeArchivePath(f.Path),
+                    AudioPaths.NormalizeArchivePath(f.Path),
                     wantedPath,
                     StringComparison.OrdinalIgnoreCase));
 
             if (entry == null)
-                throw new FileNotFoundException(
-                    $"Entry {variant.FilePath} not found in {variant.BsaPath}.");
+                throw new FileNotFoundException($"Entry {variant.FilePath} not found in {variant.BsaPath}.");
 
             File.WriteAllBytes(outPath, entry.GetBytes());
 
@@ -77,62 +55,46 @@ namespace Skyrim_Audio_Selector
         }
 
         private string TranscodeToWav(string sourcePath)
-{
-    if (!File.Exists(sourcePath))
-        throw new FileNotFoundException("Source file not found.", sourcePath);
+        {
+            if (!File.Exists(sourcePath))
+                throw new FileNotFoundException("Source file not found.", sourcePath);
 
-    if (_transcodedCache.TryGetValue(sourcePath, out string cached) && File.Exists(cached))
-        return cached;
+            lock (_transcodedCache)
+            {
+                if (_transcodedCache.TryGetValue(sourcePath, out var cached) && File.Exists(cached))
+                    return cached;
+            }
 
-    string tempRoot = Path.Combine(
-        Path.GetTempPath(), "SkyrimAudioSelector", "Transcoded");
-    Directory.CreateDirectory(tempRoot);
+            string tempRoot = Path.Combine(Path.GetTempPath(), "SkyrimAudioSelector", "Transcoded");
+            Directory.CreateDirectory(tempRoot);
 
-    string outFile = Path.Combine(
-        tempRoot,
-        Path.GetFileNameWithoutExtension(sourcePath) + "_" +
-        Guid.NewGuid().ToString("N") + ".wav");
+            string outFile = Path.Combine(
+                tempRoot,
+                Path.GetFileNameWithoutExtension(sourcePath) + "_" + Guid.NewGuid().ToString("N") + ".wav");
 
-    var psi = new ProcessStartInfo
-    {
-        FileName = FfmpegPath,
-        Arguments = $"-y -i \"{sourcePath}\" \"{outFile}\"",
-        UseShellExecute = false,
-        CreateNoWindow = true,
-        RedirectStandardOutput = true,
-        RedirectStandardError = true
-    };
+            var res = ProcessRunner.Run(FfmpegPath, $"-y -i \"{sourcePath}\" \"{outFile}\"");
 
-    using var proc = Process.Start(psi);
-    if (proc == null)
-        throw new InvalidOperationException("Failed to start ffmpeg process.");
+            if (res.ExitCode != 0 || !File.Exists(outFile))
+            {
+                throw new InvalidOperationException(
+                    $"ffmpeg failed with exit code {res.ExitCode}.\n\nSTDOUT:\n{res.StdOut}\n\nSTDERR:\n{res.StdErr}");
+            }
 
-    // Read both streams concurrently to avoid deadlocks on large output.
-    var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-    var stderrTask = proc.StandardError.ReadToEndAsync();
+            lock (_transcodedCache)
+            {
+                _transcodedCache[sourcePath] = outFile;
+            }
 
-    proc.WaitForExit();
-
-    string stdout = stdoutTask.GetAwaiter().GetResult();
-    string stderr = stderrTask.GetAwaiter().GetResult();
-
-    if (proc.ExitCode != 0 || !File.Exists(outFile))
-    {
-        throw new InvalidOperationException(
-            $"ffmpeg failed with exit code {proc.ExitCode}.\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}");
-    }
-
-    _transcodedCache[sourcePath] = outFile;
-    return outFile;
-}
+            return outFile;
+        }
 
         private void StopPlaybackTimer()
         {
-            if (_playbackTimer != null)
-            {
-                try { _playbackTimer.Stop(); } catch { }
-                _playbackTimer = null;
-            }
+            if (_playbackTimer == null)
+                return;
+
+            try { _playbackTimer.Stop(); } catch { }
+            _playbackTimer = null;
         }
 
         private void StartPlaybackTimer(SoundVariant variant, double seconds)
@@ -143,6 +105,7 @@ namespace Skyrim_Audio_Selector
             {
                 Interval = TimeSpan.FromSeconds(seconds)
             };
+
             _playbackTimer.Tick += (s, e) =>
             {
                 _playbackTimer.Stop();
@@ -151,6 +114,7 @@ namespace Skyrim_Audio_Selector
                 if (_currentlyPlayingVariant == variant)
                     StopPlayback();
             };
+
             _playbackTimer.Start();
         }
 
@@ -174,15 +138,12 @@ namespace Skyrim_Audio_Selector
 
             try
             {
-                string sourcePath = variant.FromBsa
-                    ? ExtractBsaEntryToTemp(variant)
-                    : variant.FilePath;
+                string sourcePath = variant.FromBsa ? ExtractBsaEntryToTemp(variant) : variant.FilePath;
 
                 if (!File.Exists(sourcePath))
                     throw new FileNotFoundException("Source file not found.", sourcePath);
 
-                string ext = Path.GetExtension(sourcePath).ToLowerInvariant();
-                string wavToPlay = ext == ".wav"
+                string wavToPlay = string.Equals(Path.GetExtension(sourcePath), ".wav", StringComparison.OrdinalIgnoreCase)
                     ? sourcePath
                     : TranscodeToWav(sourcePath);
 
@@ -209,7 +170,9 @@ namespace Skyrim_Audio_Selector
             {
                 WpfMessageBox.Show(
                     "Error starting playback:\n" + ex,
-                    "Playback error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Playback error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 

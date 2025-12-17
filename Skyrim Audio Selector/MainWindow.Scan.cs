@@ -1,26 +1,6 @@
-using Microsoft.Win32;
-using Mutagen.Bethesda;
-using Mutagen.Bethesda.Archives;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Media;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using Forms = System.Windows.Forms;
-using MediaColor = System.Windows.Media.Color;
 using WpfMessageBox = System.Windows.MessageBox;
 
 namespace Skyrim_Audio_Selector
@@ -38,7 +18,6 @@ namespace Skyrim_Audio_Selector
             }
 
             var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-
             foreach (var list in _conflicts.Values)
             {
                 foreach (var v in list)
@@ -73,85 +52,115 @@ namespace Skyrim_Audio_Selector
             }
 
             string search = (SearchTextBox.Text ?? string.Empty).Trim();
-            bool hasSearch = !string.IsNullOrEmpty(search);
-
             bool showVanilla = ShowVanillaConflictsCheckBox.IsChecked == true;
             bool safeMode = SafeModeCheckBox.IsChecked == true;
 
-            var filteredKeys = _conflicts.Keys
-                .Where(key =>
-                {
-                    if (!_conflicts.TryGetValue(key, out var variants) ||
-                        variants == null || variants.Count == 0)
-                        return false;
+            var filteredKeys = new List<string>(_conflicts.Count);
 
-                    if (hasSearch &&
-                        key.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0)
-                        return false;
+            foreach (var kvp in _conflicts)
+            {
+                if (ShouldShowConflict(kvp.Key, kvp.Value, selectedMod, search, showVanilla, safeMode))
+                    filteredKeys.Add(kvp.Key);
+            }
 
-                    if (safeMode)
-                    {
-                        bool hasBase = variants.Any(v =>
-                            string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase));
-
-                        bool hasNonBase = variants.Any(v =>
-                            !string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase));
-
-                        if (!(hasBase && hasNonBase))
-                            return false;
-                    }
-
-                    if (!showVanilla)
-                    {
-                        bool involvesBase = variants.Any(v =>
-                            string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase));
-
-                        var nonBaseMods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                        foreach (var v in variants)
-                        {
-                            if (!string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase))
-                                nonBaseMods.Add(v.Mod.Name);
-                        }
-
-                        bool involvesPatch = variants.Any(v => v.Mod.IsPatch);
-
-                        if (involvesBase && nonBaseMods.Count <= 1 && !involvesPatch)
-                            return false;
-                    }
-
-                    if (selectedMod != null)
-                    {
-                        bool anyFromSelected = variants.Any(v =>
-                            string.Equals(v.Mod.Name, selectedMod, StringComparison.OrdinalIgnoreCase));
-                        if (!anyFromSelected)
-                            return false;
-                    }
-
-                    return true;
-                })
-                .OrderBy(k => k)
-                .ToList();
-
+            filteredKeys.Sort(StringComparer.OrdinalIgnoreCase);
             ConflictsListBox.ItemsSource = filteredKeys;
+        }
+
+        private static bool ShouldShowConflict(
+            string key,
+            List<SoundVariant> variants,
+            string selectedMod,
+            string search,
+            bool showVanilla,
+            bool safeMode)
+        {
+            if (string.IsNullOrEmpty(key) || variants == null || variants.Count == 0)
+                return false;
+
+            if (!string.IsNullOrEmpty(search) &&
+                key.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return false;
+            }
+
+            bool involvesBase = false;
+            bool hasNonBase = false;
+            bool involvesPatch = false;
+
+            string firstNonBaseMod = null;
+            bool hasSecondNonBaseMod = false;
+
+            bool anyFromSelected = selectedMod == null;
+
+            foreach (var v in variants)
+            {
+                if (v?.Mod == null)
+                    continue;
+
+                string modName = v.Mod.Name;
+
+                if (!anyFromSelected && string.Equals(modName, selectedMod, StringComparison.OrdinalIgnoreCase))
+                    anyFromSelected = true;
+
+                if (v.Mod.IsPatch)
+                    involvesPatch = true;
+
+                if (string.Equals(modName, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase))
+                {
+                    involvesBase = true;
+                    continue;
+                }
+
+                hasNonBase = true;
+
+                if (!hasSecondNonBaseMod)
+                {
+                    if (firstNonBaseMod == null)
+                        firstNonBaseMod = modName;
+                    else if (!string.Equals(firstNonBaseMod, modName, StringComparison.OrdinalIgnoreCase))
+                        hasSecondNonBaseMod = true;
+                }
+            }
+
+            if (selectedMod != null && !anyFromSelected)
+                return false;
+
+            if (safeMode && !(involvesBase && hasNonBase))
+                return false;
+
+            if (!showVanilla && involvesBase && !hasSecondNonBaseMod && !involvesPatch)
+                return false;
+
+            return true;
         }
 
         private bool IsSafeModeConflict(string key)
         {
             if (string.IsNullOrEmpty(key)) return false;
 
-            if (_conflicts == null ||
-                !_conflicts.TryGetValue(key, out var variants) ||
-                variants == null || variants.Count == 0)
+            if (_conflicts == null || !_conflicts.TryGetValue(key, out var variants) || variants == null || variants.Count == 0)
                 return false;
 
-            bool hasBase = variants.Any(v =>
-                string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase));
+            bool hasBase = false;
+            bool hasNonBase = false;
 
-            bool hasNonBase = variants.Any(v =>
-                !string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase));
+            foreach (var v in variants)
+            {
+                if (v?.Mod == null)
+                    continue;
 
-            return hasBase && hasNonBase;
+                bool isBase = string.Equals(v.Mod.Name, ConflictManager.BaseGameModName, StringComparison.OrdinalIgnoreCase);
+                hasBase |= isBase;
+                hasNonBase |= !isBase;
+
+                if (hasBase && hasNonBase)
+                    return true;
+            }
+
+            return false;
         }
+
         private void DoScan(bool showPopup)
         {
             string modsRoot = ModsRootTextBox.Text.Trim();
@@ -162,8 +171,11 @@ namespace Skyrim_Audio_Selector
             {
                 if (showPopup)
                 {
-                    WpfMessageBox.Show("Please select a valid mods root directory.",
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    WpfMessageBox.Show(
+                        "Please select a valid mods root directory.",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                 }
                 return;
             }
@@ -174,7 +186,9 @@ namespace Skyrim_Audio_Selector
                 {
                     WpfMessageBox.Show(
                         "Please select a valid Skyrim Data folder (Under game root, make sure folder is not empty).",
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                 }
                 return;
             }
@@ -189,9 +203,7 @@ namespace Skyrim_Audio_Selector
 
                 var modsToScan = new List<ModInfo>();
 
-                var baseGameMod = ConflictManager.CreateBaseGameMod(skyrimData);
-                modsToScan.Add(baseGameMod);
-
+                modsToScan.Add(ConflictManager.CreateBaseGameMod(skyrimData));
                 modsToScan.AddRange(modsDict.Values);
 
                 string patchFolder = FindExistingPatchFolder(modsRoot, OutputModTextBox.Text.Trim());
@@ -229,10 +241,11 @@ namespace Skyrim_Audio_Selector
             }
             catch (Exception ex)
             {
-
                 WpfMessageBox.Show(
                     "Error while scanning mods:\n" + ex.Message,
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -240,6 +253,5 @@ namespace Skyrim_Audio_Selector
         {
             DoScan(showPopup: true);
         }
-
     }
 }

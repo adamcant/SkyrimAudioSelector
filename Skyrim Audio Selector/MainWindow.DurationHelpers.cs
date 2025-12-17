@@ -1,27 +1,6 @@
-using Microsoft.Win32;
-using Mutagen.Bethesda;
-using Mutagen.Bethesda.Archives;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Media;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Threading;
-using Forms = System.Windows.Forms;
-using MediaColor = System.Windows.Media.Color;
-using WpfMessageBox = System.Windows.MessageBox;
 
 namespace Skyrim_Audio_Selector
 {
@@ -77,9 +56,7 @@ namespace Skyrim_Audio_Selector
 
             try
             {
-                string sourcePath = variant.FromBsa
-                    ? ExtractBsaEntryToTemp(variant)
-                    : variant.FilePath;
+                string sourcePath = variant.FromBsa ? ExtractBsaEntryToTemp(variant) : variant.FilePath;
 
                 double? dur = GetAudioDurationSeconds(sourcePath);
                 if (!dur.HasValue || token.IsCancellationRequested)
@@ -103,25 +80,9 @@ namespace Skyrim_Audio_Selector
 
             try
             {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = FfmpegPath,
-                    Arguments = $"-i \"{sourcePath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
+                var res = ProcessRunner.Run(FfmpegPath, $"-i \"{sourcePath}\"");
 
-                using var proc = Process.Start(psi);
-                if (proc == null)
-                    return null;
-
-                string stderr = proc.StandardError.ReadToEnd();
-                string stdout = proc.StandardOutput.ReadToEnd();
-                proc.WaitForExit();
-
-                string text = stderr + "\n" + stdout;
+                string text = (res.StdErr ?? string.Empty) + "\n" + (res.StdOut ?? string.Empty);
 
                 var match = DurationRegex.Match(text);
                 if (!match.Success)
@@ -142,6 +103,5 @@ namespace Skyrim_Audio_Selector
                 return null;
             }
         }
-
     }
 }
