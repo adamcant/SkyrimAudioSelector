@@ -21,7 +21,6 @@ namespace Skyrim_Audio_Selector
             if (string.IsNullOrWhiteSpace(variant.BsaPath))
                 throw new InvalidOperationException("Variant is marked as FromBsa, but BsaPath is empty.");
 
-            // Dictionary is already case-insensitive; avoid extra allocations.
             string cacheKey = $"{variant.BsaPath}|{variant.FilePath}";
 
             lock (_bsaExtractCache)
@@ -39,7 +38,6 @@ namespace Skyrim_Audio_Selector
             var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
             string wantedPath = AudioPaths.NormalizeArchivePath(variant.FilePath);
 
-            // Manual loop avoids LINQ allocations and lets us break early.
             IArchiveFile? found = null;
             foreach (var f in reader.Files)
             {

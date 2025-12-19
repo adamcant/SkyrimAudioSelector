@@ -137,7 +137,6 @@ namespace Skyrim_Audio_Selector
 
             if (_conflicts.TryGetValue(conflictKey, out var list) && list != null && list.Count > 0)
             {
-                // Equivalent to OrderBy(...).LastOrDefault(), but avoids sorting allocations.
                 SoundVariant best = null;
                 int bestPriority = int.MinValue;
 

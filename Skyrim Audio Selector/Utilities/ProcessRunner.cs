@@ -29,7 +29,6 @@ namespace Skyrim_Audio_Selector
             if (proc == null)
                 throw new InvalidOperationException($"Failed to start process: {exePath}");
 
-            // Read both streams concurrently to avoid deadlocks.
             var stdoutTask = proc.StandardOutput.ReadToEndAsync();
             var stderrTask = proc.StandardError.ReadToEndAsync();
 

@@ -57,11 +57,6 @@ namespace Skyrim_Audio_Selector
 
         private static int FindSegmentStart(string path, string segment)
         {
-            // We want the directory segment itself (sound/music), not a partial match.
-            // Accept:
-            //   sound/...   (start of string)
-            //   .../sound/... (middle)
-            // and same for music.
 
             string startNeedle = segment + "/";
             if (path.StartsWith(startNeedle, StringComparison.Ordinal))
@@ -70,7 +65,7 @@ namespace Skyrim_Audio_Selector
             string midNeedle = "/" + segment + "/";
             int idx = path.IndexOf(midNeedle, StringComparison.Ordinal);
             if (idx >= 0)
-                return idx + 1; // +1 to skip the leading '/'
+                return idx + 1;
 
             return -1;
         }

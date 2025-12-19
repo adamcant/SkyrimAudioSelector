@@ -230,8 +230,6 @@ namespace Skyrim_Audio_Selector
 
             Directory.CreateDirectory(patchRootPath);
 
-            // 1) Copy loose winners immediately.
-            // 2) Group BSA winners so we only open each archive once.
             var bsaGroups = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var kvp in winners)
