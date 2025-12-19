@@ -18,7 +18,11 @@ namespace Skyrim_Audio_Selector
             if (!variant.FromBsa)
                 throw new InvalidOperationException("Variant is not from BSA/BA2.");
 
-            string cacheKey = $"{variant.BsaPath}|{variant.FilePath}".ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(variant.BsaPath))
+                throw new InvalidOperationException("Variant is marked as FromBsa, but BsaPath is empty.");
+
+            // Dictionary is already case-insensitive; avoid extra allocations.
+            string cacheKey = $"{variant.BsaPath}|{variant.FilePath}";
 
             lock (_bsaExtractCache)
             {
@@ -35,16 +39,21 @@ namespace Skyrim_Audio_Selector
             var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
             string wantedPath = AudioPaths.NormalizeArchivePath(variant.FilePath);
 
-            var entry = reader.Files.FirstOrDefault(f =>
-                string.Equals(
-                    AudioPaths.NormalizeArchivePath(f.Path),
-                    wantedPath,
-                    StringComparison.OrdinalIgnoreCase));
+            // Manual loop avoids LINQ allocations and lets us break early.
+            IArchiveFile? found = null;
+            foreach (var f in reader.Files)
+            {
+                if (string.Equals(AudioPaths.NormalizeArchivePath(f.Path), wantedPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    found = f;
+                    break;
+                }
+            }
 
-            if (entry == null)
+            if (found == null)
                 throw new FileNotFoundException($"Entry {variant.FilePath} not found in {variant.BsaPath}.");
 
-            File.WriteAllBytes(outPath, entry.GetBytes());
+            File.WriteAllBytes(outPath, found.GetBytes());
 
             lock (_bsaExtractCache)
             {
