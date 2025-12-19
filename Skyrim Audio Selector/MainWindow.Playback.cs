@@ -36,7 +36,7 @@ namespace Skyrim_Audio_Selector
             string fileName = Path.GetFileName(variant.FilePath.Replace('/', Path.DirectorySeparatorChar));
             string outPath = Path.Combine(tempRoot, $"{Guid.NewGuid():N}_{fileName}");
 
-            var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
+            using var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
             string wantedPath = AudioPaths.NormalizeArchivePath(variant.FilePath);
 
             // Manual loop avoids LINQ allocations and lets us break early.
