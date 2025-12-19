@@ -15,7 +15,7 @@ namespace Skyrim_Audio_Selector
             if (string.IsNullOrWhiteSpace(modsRoot) || !Directory.Exists(modsRoot))
             {
                 WpfMessageBox.Show(
-                    "Mods root must be set (needed when output is left empty).",
+                    "Mods root must be set.",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -142,8 +142,8 @@ namespace Skyrim_Audio_Selector
                     completed = true;
 
                     string message = !packToBsa
-                        ? $"Patch mod generated as loose files under:{patchRoot}"
-                        : $"Patch mod generated as BSA under: {finalArchivePath} Loose audio files in this patch folder were deleted (BSA-only mode).";
+                        ? $"Patch mod generated as loose files under:\n{patchRoot}"
+                        : $"Patch mod generated as a BSA under:\n{finalArchivePath}\n\nLoose audio files in this patch folder were deleted (BSA-only mode).";
 
                     WpfMessageBox.Show(message, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -158,7 +158,7 @@ namespace Skyrim_Audio_Selector
             catch (Exception ex)
             {
                 WpfMessageBox.Show(
-                    "Error while generating patch mod / packing BSA:" + ex,
+                    "Error while generating patch mod / packing BSA:\n" + ex,
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

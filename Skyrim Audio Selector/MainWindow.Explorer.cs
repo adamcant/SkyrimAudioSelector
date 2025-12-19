@@ -136,7 +136,26 @@ namespace Skyrim_Audio_Selector
                 return explicitWinner;
 
             if (_conflicts.TryGetValue(conflictKey, out var list) && list != null && list.Count > 0)
-                return list.OrderBy(v => v.Mod.Priority).LastOrDefault();
+            {
+                // Equivalent to OrderBy(...).LastOrDefault(), but avoids sorting allocations.
+                SoundVariant best = null;
+                int bestPriority = int.MinValue;
+
+                foreach (var v in list)
+                {
+                    if (v?.Mod == null)
+                        continue;
+
+                    int p = v.Mod.Priority;
+                    if (best == null || p >= bestPriority)
+                    {
+                        best = v;
+                        bestPriority = p;
+                    }
+                }
+
+                return best;
+            }
 
             return null;
         }
