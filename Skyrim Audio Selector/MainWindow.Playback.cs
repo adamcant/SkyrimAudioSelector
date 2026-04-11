@@ -13,6 +13,19 @@ namespace Skyrim_Audio_Selector
     {
         // ---------------- Playback ----------------
 
+        private static string ResolveFfmpegPath()
+        {
+            try
+            {
+                string local = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe");
+                if (File.Exists(local))
+                    return local;
+            }
+            catch (IOException) { }
+
+            return "ffmpeg.exe";
+        }
+
         private string ExtractBsaEntryToTemp(SoundVariant variant)
         {
             if (!variant.FromBsa)
@@ -199,10 +212,6 @@ namespace Skyrim_Audio_Selector
                 _currentlyPlayingVariant.IsPlaying = false;
                 _currentlyPlayingVariant = null;
             }
-        }
-
-        private void VariantsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
         }
     }
 }

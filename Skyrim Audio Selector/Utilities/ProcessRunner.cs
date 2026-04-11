@@ -3,10 +3,7 @@ using System.Diagnostics;
 
 namespace Skyrim_Audio_Selector
 {
-    internal readonly record struct ProcessRunResult(int ExitCode, string StdOut, string StdErr)
-    {
-        internal string CombinedOutput => (StdOut ?? string.Empty) + "\n" + (StdErr ?? string.Empty);
-    }
+    internal readonly record struct ProcessRunResult(int ExitCode, string StdOut, string StdErr);
 
     internal static class ProcessRunner
     {

@@ -317,9 +317,7 @@
           <CheckBox x:Name="PackToBsaCheckBox"
                               Content="Pack patch into BSA (no loose audio files)"
                               VerticalAlignment="Center"
-                              Margin="0,0,16,0"
-                              Checked="PackToBsaCheckBox_Changed"
-                              Unchecked="PackToBsaCheckBox_Changed"/>
+                              Margin="0,0,16,0"/>
 
           <!-- 🔽 This text will now grey out when the checkbox is unchecked -->
           <TextBlock Text="bsarch.exe:"

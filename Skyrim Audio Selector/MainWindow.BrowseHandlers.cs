@@ -56,10 +56,5 @@ namespace Skyrim_Audio_Selector
             if (dlg.ShowDialog() == true)
                 BsarchPathTextBox.Text = dlg.FileName;
         }
-
-        private void PackToBsaCheckBox_Changed(object sender, RoutedEventArgs e)
-        {
-        }
-
     }
 }

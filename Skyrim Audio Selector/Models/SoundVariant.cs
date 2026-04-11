@@ -98,10 +98,6 @@ namespace Skyrim_Audio_Selector
         public string SourceDescription =>
             FromBsa ? $"BSA: {Path.GetFileName(BsaPath)}" : "Loose file";
 
-        public SoundVariant(ModInfo mod, string filePath, string relativeKey)
-            : this(mod, filePath, relativeKey, fromBsa: false, bsaPath: null)
-        { }
-
         public SoundVariant(ModInfo mod, string filePath, string relativeKey, bool fromBsa, string bsaPath)
         {
             Mod = mod;
