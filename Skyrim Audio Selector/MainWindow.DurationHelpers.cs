@@ -21,8 +21,14 @@ namespace Skyrim_Audio_Selector
 
             Task.Run(() =>
             {
-                foreach (var v in snapshot)
-                    ComputeDurationForVariantIfNeeded(v, CancellationToken.None);
+                try
+                {
+                    foreach (var v in snapshot)
+                        ComputeDurationForVariantIfNeeded(v, CancellationToken.None);
+                }
+                catch (Exception)
+                {
+                }
             });
         }
 
@@ -39,12 +45,18 @@ namespace Skyrim_Audio_Selector
 
             Task.Run(() =>
             {
-                foreach (var v in allVariants)
+                try
                 {
-                    if (token.IsCancellationRequested)
-                        break;
+                    foreach (var v in allVariants)
+                    {
+                        if (token.IsCancellationRequested)
+                            break;
 
-                    ComputeDurationForVariantIfNeeded(v, token);
+                        ComputeDurationForVariantIfNeeded(v, token);
+                    }
+                }
+                catch (Exception)
+                {
                 }
             }, token);
         }
@@ -62,13 +74,13 @@ namespace Skyrim_Audio_Selector
                 if (!dur.HasValue || token.IsCancellationRequested)
                     return;
 
-                Dispatcher.Invoke(() =>
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
                     if (!token.IsCancellationRequested)
                         variant.DurationSeconds = dur.Value;
-                });
+                }));
             }
-            catch
+            catch (Exception ex) when (ex is IOException or InvalidOperationException or FileNotFoundException)
             {
             }
         }
@@ -98,7 +110,7 @@ namespace Skyrim_Audio_Selector
 
                 return totalSeconds;
             }
-            catch
+            catch (Exception ex) when (ex is IOException or InvalidOperationException or FormatException)
             {
                 return null;
             }

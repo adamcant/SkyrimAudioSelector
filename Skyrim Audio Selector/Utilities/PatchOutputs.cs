@@ -21,7 +21,7 @@ namespace Skyrim_Audio_Selector
 
                 if (AudioFiles.IsAudioExtension(Path.GetExtension(file)))
                 {
-                    try { File.Delete(file); } catch { }
+                    try { File.Delete(file); } catch (IOException) { }
                 }
             }
 
@@ -41,7 +41,7 @@ namespace Skyrim_Audio_Selector
                     if (!Directory.EnumerateFileSystemEntries(dir).Any())
                         Directory.Delete(dir, false);
                 }
-                catch { }
+                catch (IOException) { }
             }
         }
 
@@ -55,7 +55,7 @@ namespace Skyrim_Audio_Selector
                 if (File.Exists(path))
                     File.Delete(path);
             }
-            catch { }
+            catch (IOException) { }
         }
     }
 }

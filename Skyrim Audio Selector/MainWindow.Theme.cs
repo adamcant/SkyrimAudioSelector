@@ -25,7 +25,7 @@ namespace Skyrim_Audio_Selector
                 if (File.Exists(local))
                     return local;
             }
-            catch { }
+            catch (IOException) { }
 
             return "ffmpeg.exe";
         }

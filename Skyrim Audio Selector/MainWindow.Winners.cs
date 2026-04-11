@@ -12,14 +12,14 @@ namespace Skyrim_Audio_Selector
             if (_currentConflictKey == null)
             {
                 WpfMessageBox.Show("Select a conflict first.",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "No selection", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             if (VariantsDataGrid.SelectedItem is not SoundVariant selected)
             {
                 WpfMessageBox.Show("Select a variant row first.",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "No selection", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 

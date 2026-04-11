@@ -76,8 +76,8 @@ namespace Skyrim_Audio_Selector
             _miOpenConflictInExplorer.ToolTip = ok
                 ? null
                 : (variant?.FromBsa == true
-                    ? "Disabled: this winner is inside a BSA/BA2 (not a loose file)."
-                    : "Disabled: no loose winner file found.");
+                    ? "The winner is inside a BSA/BA2 archive, so there is no loose file to open."
+                    : "No loose winner file was found on disk.");
         }
 
         private void VariantsDataGrid_ContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -100,8 +100,8 @@ namespace Skyrim_Audio_Selector
             _miOpenVariantInExplorer.ToolTip = ok
                 ? null
                 : (v.FromBsa
-                    ? "Disabled: this file is inside a BSA/BA2 (not a loose file)."
-                    : "Disabled: file not found on disk.");
+                    ? "This file is inside a BSA/BA2 archive, so there is no loose file to open."
+                    : "The file was not found on disk.");
         }
 
         private void OpenConflictWinnerLocation_Click(object sender, RoutedEventArgs e)
@@ -146,7 +146,7 @@ namespace Skyrim_Audio_Selector
                         continue;
 
                     int p = v.Mod.Priority;
-                    if (best == null || p >= bestPriority)
+                    if (best == null || p > bestPriority)
                     {
                         best = v;
                         bestPriority = p;
