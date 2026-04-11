@@ -185,7 +185,7 @@ namespace Skyrim_Audio_Selector
                 if (showPopup)
                 {
                     WpfMessageBox.Show(
-                        "Please select a valid Skyrim Data folder (Under game root, make sure folder is not empty).",
+                        "Please select a valid Skyrim Data folder (typically under the game root). Make sure the folder exists.",
                         "Error",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -232,8 +232,15 @@ namespace Skyrim_Audio_Selector
 
                 if (showPopup)
                 {
+                    string scanMessage = _conflicts.Count switch
+                    {
+                        0 => "No conflicts found.",
+                        1 => "Found 1 conflict.",
+                        _ => $"Found {_conflicts.Count} conflicts."
+                    };
+
                     WpfMessageBox.Show(
-                        $"Found {_conflicts.Count} conflicts.",
+                        scanMessage,
                         "Scan complete",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);

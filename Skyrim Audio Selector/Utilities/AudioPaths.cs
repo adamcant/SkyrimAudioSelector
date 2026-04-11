@@ -18,7 +18,7 @@ namespace Skyrim_Audio_Selector
             {
                 rel = Path.GetRelativePath(modRoot, file);
             }
-            catch
+            catch (ArgumentException)
             {
                 return null;
             }

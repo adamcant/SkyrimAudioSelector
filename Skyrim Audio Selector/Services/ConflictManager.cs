@@ -2,7 +2,6 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Archives;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -14,18 +13,6 @@ namespace Skyrim_Audio_Selector
 
         private static bool IsMo2VfsActive()
         {
-            try
-            {
-                foreach (ProcessModule m in Process.GetCurrentProcess().Modules)
-                {
-                    string name = m?.ModuleName ?? "";
-                    if (name.IndexOf("usvfs", StringComparison.OrdinalIgnoreCase) >= 0)
-                        return true;
-                }
-            }
-            catch
-            {
-            }
 
             return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MO2_PATH"))
                 || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MO2_INSTANCE"));
@@ -94,7 +81,7 @@ namespace Skyrim_Audio_Selector
             {
                 dirs = Directory.GetDirectories(modsRoot);
             }
-            catch
+            catch (IOException)
             {
                 return mods;
             }
@@ -157,7 +144,7 @@ namespace Skyrim_Audio_Selector
             {
                 files = Directory.EnumerateFiles(mod.DirectoryPath, "*.*", SearchOption.AllDirectories);
             }
-            catch
+            catch (IOException)
             {
                 return;
             }
@@ -181,7 +168,7 @@ namespace Skyrim_Audio_Selector
                 archives = Directory.EnumerateFiles(mod.DirectoryPath, "*.bsa", SearchOption.TopDirectoryOnly)
                     .Concat(Directory.EnumerateFiles(mod.DirectoryPath, "*.ba2", SearchOption.TopDirectoryOnly));
             }
-            catch
+            catch (IOException)
             {
                 return;
             }
@@ -206,7 +193,7 @@ namespace Skyrim_Audio_Selector
                         AddVariant(byKey, key, new SoundVariant(mod, entryPath, key, fromBsa: true, bsaPath: bsaPath));
                     }
                 }
-                catch
+                catch (Exception ex) when (ex is IOException or InvalidOperationException)
                 {
                 }
             }
@@ -257,11 +244,14 @@ namespace Skyrim_Audio_Selector
                         continue;
 
                     File.Copy(winner.FilePath, destPath, overwrite: true);
+                    var now = DateTime.UtcNow;
+                    File.SetCreationTimeUtc(destPath, now);
+                    File.SetLastWriteTimeUtc(destPath, now);
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(winner.BsaPath))
-                    throw new InvalidOperationException($"Variant for {key} is marked as FromBsa, but BsaPath is empty.");
+                    throw new InvalidOperationException($"The selected winner for \"{key}\" is marked as coming from a BSA/BA2 archive, but no archive path is set.");
 
                 string wantedPath = AudioPaths.NormalizeArchivePath(winner.FilePath);
 

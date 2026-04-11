@@ -16,10 +16,10 @@ namespace Skyrim_Audio_Selector
         private string ExtractBsaEntryToTemp(SoundVariant variant)
         {
             if (!variant.FromBsa)
-                throw new InvalidOperationException("Variant is not from BSA/BA2.");
+                throw new InvalidOperationException("This audio variant is not stored inside a BSA/BA2 archive.");
 
             if (string.IsNullOrWhiteSpace(variant.BsaPath))
-                throw new InvalidOperationException("Variant is marked as FromBsa, but BsaPath is empty.");
+                throw new InvalidOperationException("This audio variant is marked as coming from a BSA/BA2 archive, but no archive path is set.");
 
             string cacheKey = $"{variant.BsaPath}|{variant.FilePath}";
 
@@ -33,7 +33,7 @@ namespace Skyrim_Audio_Selector
             Directory.CreateDirectory(tempRoot);
 
             string fileName = Path.GetFileName(variant.FilePath.Replace('/', Path.DirectorySeparatorChar));
-            string outPath = Path.Combine(tempRoot, $"{Guid.NewGuid():N}_{fileName}");
+            string outPath = Path.Combine(tempRoot, $"{NewUniqueHex()}_{fileName}");
 
             var reader = Archive.CreateReader(GameRelease.SkyrimSE, variant.BsaPath);
             string wantedPath = AudioPaths.NormalizeArchivePath(variant.FilePath);
@@ -77,7 +77,7 @@ namespace Skyrim_Audio_Selector
 
             string outFile = Path.Combine(
                 tempRoot,
-                Path.GetFileNameWithoutExtension(sourcePath) + "_" + Guid.NewGuid().ToString("N") + ".wav");
+                Path.GetFileNameWithoutExtension(sourcePath) + "_" + NewUniqueHex() + ".wav");
 
             var res = ProcessRunner.Run(FfmpegPath, $"-y -i \"{sourcePath}\" \"{outFile}\"");
 
@@ -100,7 +100,7 @@ namespace Skyrim_Audio_Selector
             if (_playbackTimer == null)
                 return;
 
-            try { _playbackTimer.Stop(); } catch { }
+            try { _playbackTimer.Stop(); } catch (InvalidOperationException) { }
             _playbackTimer = null;
         }
 
@@ -176,7 +176,7 @@ namespace Skyrim_Audio_Selector
             catch (Exception ex)
             {
                 WpfMessageBox.Show(
-                    "Error starting playback:\n" + ex,
+                    "Error starting playback:\n" + ex.Message,
                     "Playback error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -189,7 +189,7 @@ namespace Skyrim_Audio_Selector
 
             if (_soundPlayer != null)
             {
-                try { _soundPlayer.Stop(); } catch { }
+                try { _soundPlayer.Stop(); } catch (InvalidOperationException) { }
                 _soundPlayer.Dispose();
                 _soundPlayer = null;
             }

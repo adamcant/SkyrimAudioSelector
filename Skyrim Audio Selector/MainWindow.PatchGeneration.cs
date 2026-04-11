@@ -15,7 +15,7 @@ namespace Skyrim_Audio_Selector
             if (string.IsNullOrWhiteSpace(modsRoot) || !Directory.Exists(modsRoot))
             {
                 WpfMessageBox.Show(
-                    "Mods root must be set.",
+                    "Please set a valid Mods root folder before generating the patch.",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -44,7 +44,7 @@ namespace Skyrim_Audio_Selector
             if (packToBsa && (string.IsNullOrWhiteSpace(bsarchPath) || !File.Exists(bsarchPath)))
             {
                 WpfMessageBox.Show(
-                    "BSA packing is enabled, but bsarch.exe was not found or the path is invalid. Provide a valid bsarch.exe path and try again.",
+                    "BSA packing is enabled, but no valid bsarch.exe path is set. Please choose the bsarch.exe executable and try again.",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -91,7 +91,7 @@ namespace Skyrim_Audio_Selector
                     }
                 }
 
-                string stagingRoot = Path.Combine(outputRoot, $"{PatchFolderName}_staging_{Guid.NewGuid():N}");
+                string stagingRoot = Path.Combine(outputRoot, $"{PatchFolderName}_staging_{NewUniqueHex()}");
 
                 bool completed = false;
 
@@ -107,7 +107,7 @@ namespace Skyrim_Audio_Selector
                     if (!HasAnyAudioFiles(stagingRoot))
                     {
                         WpfMessageBox.Show(
-                            "No audio files were written to the patch output. This usually means the selection is empty or the chosen sources are missing.",
+                            "No audio files were written to the patch output. The chosen winner files appear to be missing on disk.",
                             "Nothing to generate",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
@@ -124,7 +124,7 @@ namespace Skyrim_Audio_Selector
                         string tempBsaDir = Path.Combine(Path.GetTempPath(), "SkyrimAudioSelector", "BsarchOutputs");
                         Directory.CreateDirectory(tempBsaDir);
 
-                        string tempArchivePath = Path.Combine(tempBsaDir, $"{PatchFolderName}_{Guid.NewGuid():N}.bsa");
+                        string tempArchivePath = Path.Combine(tempBsaDir, $"{PatchFolderName}_{NewUniqueHex()}.bsa");
                         PatchOutputs.TryDeleteFile(tempArchivePath);
 
                         PackPatchWithBsarch(bsarchPath, stagingRoot, tempArchivePath);
@@ -142,8 +142,8 @@ namespace Skyrim_Audio_Selector
                     completed = true;
 
                     string message = !packToBsa
-                        ? $"Patch mod generated as loose files under:\n{patchRoot}"
-                        : $"Patch mod generated as a BSA under:\n{finalArchivePath}\n\nLoose audio files in this patch folder were deleted (BSA-only mode).";
+                        ? $"Patch mod generated as loose files at:\n{patchRoot}"
+                        : $"Patch mod generated as a BSA at:\n{finalArchivePath}\n\nLoose audio files in this patch folder were deleted (BSA-only mode).";
 
                     WpfMessageBox.Show(message, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -158,7 +158,7 @@ namespace Skyrim_Audio_Selector
             catch (Exception ex)
             {
                 WpfMessageBox.Show(
-                    "Error while generating patch mod / packing BSA:\n" + ex,
+                    "Error while generating patch mod / packing BSA:\n" + ex.Message,
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -175,7 +175,7 @@ namespace Skyrim_Audio_Selector
                         return true;
                 }
             }
-            catch { }
+            catch (IOException) { }
 
             return false;
         }
@@ -195,7 +195,7 @@ namespace Skyrim_Audio_Selector
                 return;
             }
 
-            string backup = patchRoot + "_backup_" + Guid.NewGuid().ToString("N");
+            string backup = patchRoot + "_backup_" + NewUniqueHex();
             bool movedOld = false;
 
             try
@@ -208,11 +208,11 @@ namespace Skyrim_Audio_Selector
                 TryDeleteDirectory(backup);
                 return;
             }
-            catch
+            catch (IOException)
             {
                 if (movedOld && !Directory.Exists(patchRoot) && Directory.Exists(backup))
                 {
-                    try { Directory.Move(backup, patchRoot); } catch { }
+                    try { Directory.Move(backup, patchRoot); } catch (IOException) { }
                 }
             }
 
@@ -242,6 +242,10 @@ namespace Skyrim_Audio_Selector
                     Directory.CreateDirectory(destFolder);
 
                 File.Copy(filePath, dest, overwrite: true);
+
+                var now = DateTime.UtcNow;
+                File.SetCreationTimeUtc(dest, now);
+                File.SetLastWriteTimeUtc(dest, now);
             }
         }
 
@@ -255,7 +259,7 @@ namespace Skyrim_Audio_Selector
                 if (Directory.Exists(path))
                     Directory.Delete(path, recursive: true);
             }
-            catch { }
+            catch (IOException) { }
         }
 
         private static void PackPatchWithBsarch(string bsarchPath, string sourceDir, string archivePath)

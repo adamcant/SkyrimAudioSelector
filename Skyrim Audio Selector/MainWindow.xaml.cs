@@ -49,6 +49,13 @@ namespace Skyrim_Audio_Selector
             SetupExplorerContextMenus();
         }
 
+        private static string NewUniqueHex()
+        {
+            Span<byte> buf = stackalloc byte[16];
+            Random.Shared.NextBytes(buf);
+            return Convert.ToHexString(buf).ToLowerInvariant();
+        }
+
         [GeneratedRegex(@"Duration:\s(?<h>\d+):(?<m>\d+):(?<s>\d+(\.\d+)?)", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-SE")]
         private static partial Regex GenerateDurationRegex();
     }
