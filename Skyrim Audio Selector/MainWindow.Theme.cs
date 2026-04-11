@@ -1,4 +1,3 @@
-using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using MediaColor = System.Windows.Media.Color;
@@ -16,19 +15,6 @@ namespace Skyrim_Audio_Selector
 
         private SolidColorBrush MakeBrush(byte r, byte g, byte b)
             => new SolidColorBrush(MediaColor.FromRgb(r, g, b));
-
-        private static string ResolveFfmpegPath()
-        {
-            try
-            {
-                string local = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe");
-                if (File.Exists(local))
-                    return local;
-            }
-            catch (IOException) { }
-
-            return "ffmpeg.exe";
-        }
 
         private void SetTheme(bool dark)
         {
